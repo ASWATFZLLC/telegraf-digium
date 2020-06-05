@@ -124,8 +124,6 @@ def main(argv):
     response = gw.api_request(request_gw_info)
     gw_info = response['gateway']
     response = gw.api_request(request_update)
-    print(response)
-
     update = response['update']
 
     ##
