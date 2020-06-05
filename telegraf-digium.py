@@ -112,18 +112,27 @@ def main(argv):
             "method": "gateway.list",
         }
     }
+    request_update = {
+        "request" : {
+            "method": "update.list",
+        }
+    }
     response = gw.api_request(request_calls)
     calls = response['statistics']
     response = gw.api_request(request_status)
     status = response['connection_status']
     response = gw.api_request(request_gw_info)
     gw_info = response['gateway']
+    response = gw.api_request(request_update)
+    print(response)
+
+    update = response['update']
 
     ##
     ## Format to InfluxDB style
     ## https://docs.influxdata.com/influxdb/v1.8/write_protocols/line_protocol_tutorial/
     ##
-    
+
     connections = ''
     for port in status['t1_e1_interfaces']:
         connections += "pri-%s=%d," % (port['name'], 1 if port['status_desc'] == 'Up, Active' else 0)
@@ -134,12 +143,13 @@ def main(argv):
         else:
             connections += "sip-%s=null," % port['name']
             connections += "sip-latency-%s=null," % port['name']
-    print ("digium calls_active=%si,calls_max=%si,calls_processed=%si,temperature=%s,%s" % (
+    print ("digium calls_active=%si,calls_max=%si,calls_processed=%si,temperature=%s,%s,update_available=%s" % (
         calls['active'],
         calls['maxcalls'],
         calls['processed'],
         gw_info['temperature'][:-2],
-        connections[:-1]))
+        connections[:-1],
+        "True" if update['update_available'] == 1 else "False"))
 
 if __name__ == "__main__":
    main(sys.argv[1:])
