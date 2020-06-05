@@ -4,7 +4,7 @@ This can used as an [[ inputs.exec ]] in a telegraf config file.
 
 ## How to
 ```
-python telegraf-digium.py -h <DIGIUM_HOST> [--port <PORT>] -u <USER> -p <PASSWORD> [--ssl_skip_verification]"
+python telegraf-digium.py -h <DIGIUM_HOST> [--port <PORT>] -u <USER> -p <PASSWORD> [--ssl_skip_verification]
 ```
 
 ## Features
