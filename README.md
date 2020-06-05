@@ -1,6 +1,6 @@
 # telegraf-digium
 Telegraf plugin to monitor a Digium Series gateway.
-This can used as an [[ inputs.exec ]] in a telegraf config file.
+This can be used as a [[ inputs.exec ]] in a telegraf config file.
 
 ## How to
 ```
