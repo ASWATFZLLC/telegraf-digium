@@ -9,6 +9,7 @@ import cookielib
 import urllib
 import json
 from pprint import pprint
+from datetime import datetime
 
 class Digium():
     def __init__(self, host, port, user, password, ssl_skip_verification=False):
@@ -96,15 +97,49 @@ def main(argv):
 
     gw = Digium(host=host, port=port, user=user, password=password, ssl_skip_verification=ssl_skip_verification)
 
-    # Request basic infos
-    data = {
+    request_calls = {
         "request" : {
             "method": "statistics.list",
         }
     }
-    response = gw.api_request(data)
-    print(response)
+    request_status = {
+        "request" : {
+            "method": "connection_status.list",
+        }
+    }
+    request_gw_info = {
+        "request" : {
+            "method": "gateway.list",
+        }
+    }
+    response = gw.api_request(request_calls)
+    calls = response['statistics']
+    response = gw.api_request(request_status)
+    status = response['connection_status']
+    response = gw.api_request(request_gw_info)
+    gw_info = response['gateway']
+
+    ##
+    ## Format to InfluxDB style
+    ## https://docs.influxdata.com/influxdb/v1.8/write_protocols/line_protocol_tutorial/
+    ##
+    
+    connections = ''
+    for port in status['t1_e1_interfaces']:
+        connections += "pri-%s=%d," % (port['name'], 1 if port['status_desc'] == 'Up, Active' else 0)
+    for port in status['sip_endpoints']:
+        if port['status_desc']['latency'] != "Unmonitored":
+            connections += "sip-%s=%s," % (port['name'], 0 if port['status_desc']['latency'] == 'UNREACHABLE' else 1)
+            connections += "sip-latency-%s=%s," % (port['name'], "null" if port['status_desc']['latency'] == 'UNREACHABLE' else port['status_desc']['latency'])
+        else:
+            connections += "sip-%s=null," % port['name']
+            connections += "sip-latency-%s=null," % port['name']
+    print ("digium calls_active=%si,calls_max=%si,calls_processed=%si,temperature=%s,%s" % (
+        calls['active'],
+        calls['maxcalls'],
+        calls['processed'],
+        gw_info['temperature'][:-2],
+        connections[:-1]))
 
 if __name__ == "__main__":
    main(sys.argv[1:])
-
